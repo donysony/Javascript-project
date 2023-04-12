@@ -1,111 +1,90 @@
-//1. 랜덤으로 숫자를 배정한다 = 정답
- 
-//2. 입력한 값과 정답을 비교한다
-
-  //2-1. 정답이 입력한 값보다 높을경우 up을 출력한다
-  //2-2. 정답이 입력한 값보다 낮을경우 down을 출력한다
-  //2-3. 정답이 입력한 값과 동일할 경우 정답!을 출력한다 -> 게임종료
-
-//3. 남은기회를 1번 감소시킨다
-//4. 입력한 값과 정답을 비교한다
-//4-1. 이전에 입력한 값과 동일할 경우 이미 입력한 값이라는 것을 알려준다
-
-
-
-
-let computerNum = 0
-//html의 요소를 가지고 올 수 있음
-//id가 playu-button이라는 버튼클릭
-let playButton = document.getElementById("play-button")
-//사용자가 입력한 값
 let userInput = document.getElementById("user-input")
-//사용자에게 알리는 정보
-let resultArea = document.getElementById("user-area")
-//reset버튼
-let playReset = document.getElementById("play-reset")
-//기회
-let chanceArea = document.getElementById("chances-area")
-let chances = 5
-let gameover = false
-//사용자가 입력했던 값들을 모아둠
-let history= []
+let startBtn = document.querySelector("#game-stater")
+let resetBtn = document.querySelector("#game-reset")
+let result = document.querySelector(".result-text")
+let chanceArea = document.querySelector("#chance-area")
+let computerValue = 0;
+let chance = 5;
+let gameOver = false;
+let InputList = []; //사용자가 입력한 값을 담는 list
 
+chanceArea.innerHTML = `남은 기회 : ${chance}`
 
+startBtn.addEventListener("click",play) //변수로 작성
+resetBtn.addEventListener("click", reset)
+userInput.addEventListener("focus",InputClear)
 
-//함수도 매개변수처럼 넘길수 있다 -  click하면 play함수 실행
-playButton.addEventListener("click", play)
-playReset.addEventListener("click", reset)
-userInput.addEventListener("focus", function(){
-  userInput.value = "";
-})
-
-//1. 랜덤번호 지정
-function pickRandomNum(){
-  computerNum = Math.floor(Math.random()*100)+1
-  console.log("정답! : " , computerNum)
+//랜덤으로 나오는 숫자
+function PlayRandomNum(){
+  computerValue = Math.floor(Math.random()*100)+1
+  console.log("정답 : ", computerValue)
 }
 
-//2. 유저가 번호 입력, 그리고 go라는 버튼을 누름
-//2-1. 만약 유저가 랜덤번호를 맞추면, 맞췄습니다
-//2-2. 랜덤번호가 < 유저번호 Down!
-//2-3. 랜덤번호가 > 유저번호 UP!
+//Go버튼을 누르면 게임 시작 - 숫자 추측하기
 function play(){
+  //사용자로 부터 입력받은 값
   let userValue = userInput.value;
-
+  //1~100사이의 값인지 확인하는 유효성 검사
   if(userValue<1 || userValue>100){
-    resultArea.textContent = "1과 100사이 숫자를 입력해 주세요"
-    return
+    result.textContent = "1~100사이의 값을 입력하세요";
+    return;
   }
+  //입력했던 값인지 아닌지 유효성 검사
+  if(InputList.includes(userValue)){
+    result.textContent = "이미 입력한 값입니다. 다른 숫자를 입력하세요";
+    return;
+  }
+  
+  //기회감소
+  chance--;
+  chanceArea.textContent = `남은 기회 : ${chance}`;
+  InputList.push(userValue);
+  console.log(InputList)
 
-  if(history.includes(userValue)){
-    resultArea.textContent = "이미 입력한 숫자입니다 다른 숫자를 입력해 주세요"
-    return
-  }
-  
-  
-  chances--;
-  
-  if(computerNum>userValue){
-    resultArea.textContent = "up!!"
-  }else if(computerNum<userValue){
-    resultArea.textContent = "down~!!"
+  console.log("사용자 입력값 : ", userValue);
+  //남은 기회 출력
+  //사용자가 입력한 값과 랜덤으로 나온값 비교
+  if(userValue < computerValue){
+    result.textContent = "UP!!";
+  }else if(userValue>computerValue){
+    result.textContent = "DOWN!!";
   }else{
-    resultArea.textContent = "정답!!"
-    gameover = true
+    result.textContent = "정답입니다~";
+  //정답을 맞췄을 경우 버튼을 누를 수 없도록 만듬
+    gameOver = true;
   }
-  history.push(userValue)
-  console.log(history)
-  if(chances < 1){
-    gameover = true
+  //기회를 다 사용했을 경우 
+  if(chance == 0){
+    gameOver = true;
   }
-  if(gameover == true){
-    playButton.disabled = true
+  //Go버튼 비활성화
+  if(gameOver == true){
+    startBtn.disabled = gameOver;
   }
-  chanceArea.textContent = `남은 기회 : ${chances}번`
+
 }
-
-
-
-
-
-pickRandomNum()
-
-//3. reset버튼을 누르면 게임이 리셋된다
+//게임 reset
 function reset(){
-  userInput.value = ""
-  pickRandomNum()
-  resultArea.textContent = "결과값이 나옵니다"
-
+  PlayRandomNum()
+  result.textContent="살고싶다면 맞추길!";
+  chance = 5;
+  chanceArea.textContent = `남은 기회 : ${chance}`;
+  InputClear();
+  startBtn.disabled = false;
+  InputList = [];
 }
-//4. 5번의 기회를 다 쓰면 게임이 끝난다(더 이상 추측 불가, 버튼이 disable)
-//5-1. 유저가 1~100 범위 밖에 숫자를 입력하면 알려준다. 기회를 깎지 않음
-//5-2. 유저가 이미 입력한 숫자를 또 입력하면, 알려준다. 기회를 깎지 않음
 
+//사용자 입력값 clear해주기
+function InputClear(){
+  userInput.value="";
+}
 
+PlayRandomNum();
 
-//enter키를 누르면 실행
-function enter(e){
+//엔터키클릭시 동작하도록
+function Enter(e){
   if(e.keyCode == 13){
-    play()
+    play();
+    InputClear();
   }
 }
